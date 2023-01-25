@@ -6,6 +6,6 @@ package SDA_Exceptions is
    Nouvelle_Exception: Exception;
    Regle_non_trouvee: Exception;
    Lecture_point : Exception;
-
+   Mauvaise_commandeP : Exception;
    
 end SDA_Exceptions;

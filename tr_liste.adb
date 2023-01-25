@@ -4,6 +4,7 @@ with Ada.Unchecked_Deallocation;
 with Ada.Strings.Unbounded;     use Ada.Strings.Unbounded;
 with Ada.Text_IO.Unbounded_IO;  use Ada.Text_IO.Unbounded_IO;
 with SDA_Exceptions;            use SDA_Exceptions;
+with cli ; use cli;
 
 package body TR_liste is
 
@@ -156,11 +157,14 @@ package body TR_liste is
       Nouv_Cellule : T_liste ;
       Regleb : T_Regle;
       begin
+     
+
          Regleb.interfac := Interfac ;
          Regleb.IP := IP;
          Regleb.Masque :=  Masque ;
          Nouv_Cellule := new T_Cellule'(Regle => Regleb, Compteur => 0, Suivant => Sda);
          Sda := Nouv_Cellule;
+      
 	end Ajouter_regle_liste;
 
    function TraiterIP_liste(Sdad : in T_liste; IPentree : in T_IP) return T_IP is

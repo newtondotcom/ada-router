@@ -4,41 +4,54 @@ with Ada.Integer_Text_IO;       use Ada.Integer_Text_IO;
 with Ada.Strings.Unbounded;     use Ada.Strings.Unbounded;
 with Ada.Text_IO.Unbounded_IO;  use Ada.Text_IO.Unbounded_IO;
 with Ada.Command_Line;          use Ada.Command_Line;
-
+with SDA_Exceptions;            use SDA_Exceptions;
 
 package body cli is
 
 
     procedure Lecture_lcommande (stats_commande : in out Integer; politique : in out integer; taille_cache : in out Integer; fichier_table : in out Unbounded_String; fichier_paquet : in out Unbounded_String; fichier_resultat : in out Unbounded_String) is
+      skipp : Boolean := False;
     begin 
         for Arg in 1..Argument_Count loop
-
-            if Argument(Arg) = "-s" then
-                stats_commande := 1;               --Afficher statistiques
-            elsif Argument(Arg)= "-S" then
-                stats_commande := 0;               --Ne pas afficher statistique
-            elsif Argument(Arg) = "-p" then
-                if Argument(Arg+1) = "FIFO" then
-                    politique := 0;               --politique FIFO
-                    elsif Argument(Arg+1) = "LRU" then
-                        politique := 1;               --politique LRU
-                    else
-                            politique := 2;               --politique LFU
-                    end if;
-            elsif Argument(Arg) = "-c" then
-                    taille_cache := Integer'value(Argument(Arg+1));                   --taille_cache du cache
-            elsif Argument(Arg) = "-t" then
-                    fichier_table := To_Unbounded_String(Argument(Arg+1));      
-            elsif Argument(Arg) = "-P" then
-                    fichier_paquet := To_Unbounded_String(Argument(Arg+1));     
-            elsif Argument(Arg) = "-r" then
-                    fichier_resultat := To_Unbounded_String(Argument(Arg+1));   
+            if skipp then
+                skipp := False;
             else
-                    null;
+               if Argument(Arg) = "-s" then
+                  stats_commande := 1;               --Afficher statistiques
+               elsif Argument(Arg)= "-S" then
+                  stats_commande := 0;               --Ne pas afficher statistique
+               elsif Argument(Arg) = "-p" then
+                  skipp := True;
+                  if Argument(Arg+1) = "FIFO" then
+                     politique := 0;               --politique FIFO
+                     elsif Argument(Arg+1) = "LRU" then
+                           politique := 1;               --politique LRU
+                     elsif Argument(Arg+1) = "LFU" then
+                              politique := 2;               --politique LFU
+                     else 
+                        raise Mauvaise_commandeP;
+                     end if;
+               elsif Argument(Arg) = "-c" then
+                     skipp := True;
+                     taille_cache := Integer'value(Argument(Arg+1));  --taille_cache du cache
+               elsif Argument(Arg) = "-t" then
+                     skipp := True;
+                     fichier_table := To_Unbounded_String(Argument(Arg+1));      
+               elsif Argument(Arg) = "-P" then
+                     skipp := True;
+                     fichier_paquet := To_Unbounded_String(Argument(Arg+1));     
+               elsif Argument(Arg) = "-r" then
+                     skipp := True;
+                     fichier_resultat := To_Unbounded_String(Argument(Arg+1));   
+               else
+                     raise Constraint_Error;        
+               end if;
             end if;
-
-    end loop;
-    end Lecture_lcommande;
+        end loop;
+    exception 
+	    when Mauvaise_commandeP => Put_Line("Ecrire une politique correcte");
+	    when Constraint_Error =>  Put_Line("Ecrire une commande correcte (voir manuel utilisateur)");
+   end Lecture_lcommande;
 
    function "+" (Item : in String) return Unbounded_String
         renames To_Unbounded_String;

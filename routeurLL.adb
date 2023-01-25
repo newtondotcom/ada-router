@@ -52,7 +52,7 @@ procedure routeurll is
     TR : T_liste;
     cache : T_liste;
 
-    taille_masque : Integer;
+    --taille_masque : Integer;
 
 	Nom_Fichier_Resultat : Unbounded_String;
    Nom_Fichier_Paquet : Unbounded_String;
@@ -148,8 +148,13 @@ procedure routeurll is
                      AfficherListe(cache);
                      Put_line("------------------------------------------------");   
 
+	   elsif  Adresse_IP = To_Unbounded_String("range a..z") or Adresse_IP = To_Unbounded_String("range A..Z") then
+	   
+	   	raise Constraint_Error;
+
+	  
+	   else
             -- Traitement des routes
-            else
 
                      --Incrémentation du compteur de nombre de routes
                      nb_demande_route := nb_demande_route + 1;
@@ -208,11 +213,12 @@ procedure routeurll is
                            --IP_actuelle := IP_actuelle and Masquevf;
 
                            ------Vérifions que le cache ne soit pas plein
-                           if Taille_liste(cache) < taille_cache + 1 then
-                              Ajouter_regle_liste(cache, IP_actuelle , Interf , Masquevf);
-                           
+                           if Taille_liste(cache) < taille_cache  and deparse_ip(IP_actuelle) /= "0.0.0.0" then
+          	
+                             		 Ajouter_regle_liste(cache, IP_actuelle , Interf , Masquevf);
+                           	
                            ---Si le cache est plein, alors il faut regarder la politique considérée
-                           else 
+                           elsif Taille_liste(cache) >= taille_cache + 1  and deparse_ip(IP_actuelle) /= "0.0.0.0" then
                                  nb_defaut_cache := nb_defaut_cache + 1;
 
                                  case politique is
@@ -220,15 +226,19 @@ procedure routeurll is
                                  ---politique FIFO
                                   when 0 => 
                                     Supprimer_fin(cache); 
+                                
                                     Ajouter_regle_liste(cache,IP_actuelle , Interf , Masquevf);
-
+				    
                                  ----politique LRU
                                   when 1 => 
                                     --Supprimer la donnée la moins récemment utilisée du cache et de la liste
                                     minc := Min(cache); 
                                     Supprimer_par_destination_liste(cache,minc);
                                     --Ajouter la nouvelle règle au cache et à la liste
+                                  
+          			   
                                     Ajouter_regle_liste(cache,IP_actuelle , Interf , Masquevf);
+                                   
                                     Incrementer_rec(cache);
 
                                  ---politique LFU
@@ -238,13 +248,16 @@ procedure routeurll is
                                     Supprimer_par_destination_liste(cache,maxc);
 
                                     --Ajouter la nouvelle règle au cache et à la liste
+                                   
                                     Ajouter_regle_liste(cache,IP_actuelle , Interf , Masquevf);
-
+			            
                                     Incrementer_freq(cache, IP_actuelle);
 
                                  when others => Null;
                                  end case;
-                              end if;
+                           else 
+                             	null;
+                           end if;
                            end if;
 
                      ---L'utilisateur n'a pas demandé de cache
@@ -256,14 +269,14 @@ procedure routeurll is
                         Put(Type_Fichier_Resultat, Texte_temp);                  --On affiche l'IP destination et l'interface utilisée dans le fichier résultat
                         New_Line (Type_Fichier_Resultat);
                      end if;
-         
-
+        
             end if;
                   exit when End_Of_File (Type_Fichier_Paquet);
                end loop;
                
             exception
-            --when Cle_Absente_Exception =>
+            when Constraint_Error => Put_Line("Saisir des instructions correctes dans le fichier paquets.txt"); 
+            stats_commande := 0;
             --Put("Cle absente");
             -- New_Line;
                when End_Error =>
@@ -291,7 +304,7 @@ procedure routeurll is
 
     procedure Afficher_taux_defaut_cache(taux_defaut_cache : Float) is
     begin
-      Put("Taux de défault du cache : "&taux_defaut_cache'Image);
+      Put("Taux de défauts du cache : "&taux_defaut_cache'Image);
       New_Line;
     end Afficher_taux_defaut_cache;
 
